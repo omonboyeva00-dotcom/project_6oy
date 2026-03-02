@@ -121,3 +121,20 @@ STATIC_URL = 'static/'
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT='media'
+
+
+# from datetime import timedelta
+EMAIL_EXPIRATION_TIME=3
+PHONE_EXPIRATION_TIME=2
+
+
+
+
+
+
+
+
+
+
+
+
