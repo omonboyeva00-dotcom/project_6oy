@@ -40,8 +40,7 @@ class CustomUser(AbstractUser,BaseModel):
     auth_type = models.CharField(max_length=20,choices=USER_AUTH_TYPE)
     email = models.EmailField(max_length=50, unique=True, blank=True, null=True)
     phone_number = models.CharField(max_length=13,unique=True, blank=True, null=True)
-    photo = models.ImageField(upload_to='/user_photos/',  \
-    validators=[FileExtensionValidator(allowed_extensions=['jpg', 'png','heic'])])
+    photo = models.ImageField(upload_to='/user_photos/',validators=[FileExtensionValidator(allowed_extensions=['jpg', 'png','heic'])])
 
     def __str__(self):
         return self.username
@@ -50,20 +49,18 @@ class CustomUser(AbstractUser,BaseModel):
     def check_username(self):
         if not self.username:
             temp_username=f"username{uuid.uuid4().__str__().split('-')[-1]}"
-            while CustomUser.objects.filter(username=temp_username).first().exists():
-                temp_username+=str(random.randint(0,9))
+            user=CustomUser.objects.filter(username=temp_username).first()
+            if user:
+                while user.exists():
+                    temp_username+=str(random.randint(0,9))
 
             self.username=temp_username
 
 
-    def check_pass(self):
+    def set_temp_password(self):
         if not self.password:
             temp_password=f"pass{uuid.uuid4().__str__().split('-')[-1]}"
-            self.username=temp_password
-
-    def hashing_pass(self):
-        if not self.password.startswith('pbkdf2_sha256'):
-            self.password=self.set_password(self.password)
+            self.set_password(temp_password)
 
 
     def check_email(self):
@@ -93,16 +90,12 @@ class CustomUser(AbstractUser,BaseModel):
 
 
 
-    def clean(self):
+    def save(self, *args, **kwargs):
         self.check_email()
         self.check_username()
-        self.check_pass()
-        self.hashing_pass()
-        return super().clean()
+        self.set_temp_password()
+        super().save(*args, **kwargs)
 
-    def save(self, force_insert=..., force_update=..., using=..., update_fields= ...):
-        self.clean()
-        return super().save(force_insert,force_update,using,update_fields)
 
 
 
@@ -116,13 +109,14 @@ class CodeVerify(BaseModel):
     code=models.CharField(max_length=4)
     verify_type=models.CharField(max_length=30, choices=VERIFY_TYPE)
     expiration_time=models.DateTimeField()
+    is_active=models.BooleanField(default=False)
 
     def save(self, *args, **kwargs):
         if self.verify_type== VIA_EMAIL:
             self.expiration_time=datetime.now()+timedelta(minutes=EMAIL_EXPIRATION_TIME)
         else:
             self.expiration_time=datetime.now()+timedelta(minutes=EMAIL_EXPIRATION_TIME)
-        return super().save(*args,**kwargs)
+        super().save(*args,**kwargs)
 
     def __str__(self):
         return self.username
