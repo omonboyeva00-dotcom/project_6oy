@@ -1,6 +1,5 @@
 from django.contrib import admin
-from .models import CODE_VERIFY,CustomUser
+from .models import CustomUser, CodeVerify
 
-
-admin.site.register(CODE_VERIFY,CustomUser)
-# Register your models here.
+admin.site.register(CustomUser)
+admin.site.register(CodeVerify)
